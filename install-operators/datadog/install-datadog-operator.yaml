@@ -2,6 +2,11 @@ apiVersion: policy.open-cluster-management.io/v1
 kind: Policy
 metadata:
   name: policy-datadog-operator
+  namespace: acm-policy
+  annotations:
+    policy.open-cluster-management.io/standards: NIST-CSF
+    policy.open-cluster-management.io/categories: null
+    policy.open-cluster-management.io/controls: null  
 spec:
   remediationAction: enforce
   disabled: false
@@ -10,7 +15,7 @@ spec:
         apiVersion: policy.open-cluster-management.io/v1
         kind: ConfigurationPolicy
         metadata:
-          name: datadog-operator-namespace
+          name: datadog-operator-ns
         spec:
           remediationAction: enforce 
           severity: high
@@ -21,12 +26,11 @@ spec:
                 kind: Namespace
                 metadata:
                   name: openshift-operators
-
     - objectDefinition:
         apiVersion: policy.open-cluster-management.io/v1
         kind: ConfigurationPolicy
         metadata:
-          name: datadog-operator-operator-group
+          name: datadog-operator-subscription
         spec:
           remediationAction: enforce 
           severity: high
@@ -34,45 +38,22 @@ spec:
             - complianceType: musthave
               objectDefinition:
                 apiVersion: operators.coreos.com/v1
-                kind: OperatorGroup
+                kind: Subscription
                 metadata:
                   name: datadog-operator
                   namespace: openshift-operators
-                spec:
-                  targetNamespaces:
-                    - openshift-operators
-
-    - objectDefinition:
-        apiVersion: policy.open-cluster-management.io/v1
-        kind: ConfigurationPolicy
-        metadata:
-          name: datadog-operator-subscription
-        spec:
-          remediationAction: enforce
-          severity: high
-          namespaceSelector:
-            exclude: ["kube-*"]
-            include: ["*"]
-          object-templates:
-            - complianceType: musthave
-              objectDefinition:
-                apiVersion: operators.coreos.com/v1alpha1
-                kind: Subscription
-                metadata:
-                  name: datadog-operator-certified-rhmp
-                  namespace: openshift-operator
                 spec:
                   channel: "alpha"
                   installPlanApproval: Automatic
                   name: datadog-operator-certified-rhmp
                   source: redhat-operators
                   sourceNamespace: openshift-marketplace
-
 ---
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
 metadata:
   name: datadog-operator-binding
+  namespace: acm-policy
 placementRef:
   name: datadog-operator-placementrule
   kind: PlacementRule
@@ -81,16 +62,19 @@ subjects:
 - name: policy-datadog-operator
   kind: Policy
   apiGroup: policy.open-cluster-management.io
-
 ---
 apiVersion: apps.open-cluster-management.io/v1
 kind: PlacementRule
 metadata:
   name: datadog-operator-placementrule
+  namespace: acm-policy
 spec:
   clusterConditions:
-  - status: "True"
-    type: ManagedClusterConditionAvailable
+    - status: 'True'
+      type: ManagedClusterConditionAvailable
   clusterSelector:
     matchExpressions:
-      - {key: datadog-operator, operator: In, values: ["installed"]}
+      - key: jfn
+        operator: In
+        values:
+          - 'yes'      
