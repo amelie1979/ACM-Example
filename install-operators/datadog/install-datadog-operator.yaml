@@ -4,9 +4,7 @@ metadata:
   name: policy-datadog-operator
   namespace: acm-policy
   annotations:
-    policy.open-cluster-management.io/standards: NIST-CSF
-    policy.open-cluster-management.io/categories: null
-    policy.open-cluster-management.io/controls: null  
+    policy.open-cluster-management.io/categories: DE.CM Security Continuous Monitoring
 spec:
   remediationAction: enforce
   disabled: false
@@ -17,7 +15,7 @@ spec:
         metadata:
           name: datadog-operator-ns
         spec:
-          remediationAction: enforce 
+          remediationAction: enforce
           severity: high
           object-templates:
             - complianceType: musthave
@@ -32,41 +30,44 @@ spec:
         metadata:
           name: datadog-operator-subscription
         spec:
-          remediationAction: enforce 
+          remediationAction: enforce
           severity: high
           object-templates:
             - complianceType: musthave
               objectDefinition:
-                apiVersion: operators.coreos.com/v1
+                apiVersion: operators.coreos.com/v1alpha1
                 kind: Subscription
                 metadata:
-                  name: datadog-operator
+                  name: datadog-operator-certified-rhmp
                   namespace: openshift-operators
+                  labels:
+                    operators.coreos.com/datadog-operator-certified-rhmp.openshift-operators: ""  
                 spec:
-                  channel: "alpha"
+                  channel: alpha
                   installPlanApproval: Automatic
                   name: datadog-operator-certified-rhmp
-                  source: redhat-operators
+                  source: redhat-marketplace
                   sourceNamespace: openshift-marketplace
+                  startingCSV: datadog-operator.v0.7.2
 ---
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
 metadata:
-  name: datadog-operator-binding
+  name: binding-policy-datadog-operator
   namespace: acm-policy
 placementRef:
-  name: datadog-operator-placementrule
+  name: placement-policy-datadog-operator
   kind: PlacementRule
   apiGroup: apps.open-cluster-management.io
 subjects:
-- name: policy-datadog-operator
-  kind: Policy
-  apiGroup: policy.open-cluster-management.io
+  - name: policy-datadog-operator
+    kind: Policy
+    apiGroup: policy.open-cluster-management.io
 ---
 apiVersion: apps.open-cluster-management.io/v1
 kind: PlacementRule
 metadata:
-  name: datadog-operator-placementrule
+  name: placement-policy-datadog-operator
   namespace: acm-policy
 spec:
   clusterConditions:
@@ -77,4 +78,4 @@ spec:
       - key: jfn
         operator: In
         values:
-          - 'yes'      
+          - 'yes'
